@@ -1,12 +1,11 @@
 from flask import Flask, request, jsonify
-import time  # For generating event_ts
+import hmac
+import hashlib
 
 app = Flask(__name__)
 
-# Dictionary to store verification tokens for multiple apps
-SECRET_TOKENS = {
-    "Ghost": "zvZ0YVNaRA-BkSkdpmDXzA",
-}
+# Your secret token (provided by Zoom when setting up the webhook)
+SECRET_TOKEN = "zvZ0YVNaRA-BkSkdpmDXzA"
 
 @app.route('/webhook', methods=['POST'])
 def webhook_handler():
@@ -16,35 +15,24 @@ def webhook_handler():
     if event_data.get("event") == "endpoint.url_validation":
         plain_token = event_data["payload"].get("plainToken")
         if plain_token:
+            # Generate the HMAC SHA-256 hash
+            encrypted_token = hmac.new(
+                SECRET_TOKEN.encode(), 
+                plain_token.encode(), 
+                hashlib.sha256
+            ).hexdigest()
+
             # Construct the response required by Zoom
             response = {
-                "payload": {
-                    "plainToken": plain_token
-                },
-                "event_ts": int(time.time() * 1000),  # Current timestamp in milliseconds
-                "event": "endpoint.url_validation"
+                "plainToken": plain_token,
+                "encryptedToken": encrypted_token
             }
             return jsonify(response), 200
         else:
             return jsonify({"error": "Invalid validation request"}), 400
 
-    # For other events, validate the secret token
-    received_token = request.headers.get('Authorization')
-
-    if not received_token:
-        return jsonify({"error": "Missing token"}), 401
-
-    # Check if the received token matches any known secret token
-    account_id = next((key for key, value in SECRET_TOKENS.items() if value == received_token), None)
-
-    if not account_id:
-        return jsonify({"error": "Unauthorized"}), 401
-
-    # Log or process the event for the identified account
-    print(f"Received event for {account_id}: {event_data}")
-
-    # Respond to valid requests
-    return jsonify({"status": "received", "account_id": account_id}), 200
+    # For other webhook events (example)
+    return jsonify({"message": "Event received"}), 200
 
 
 if __name__ == '__main__':

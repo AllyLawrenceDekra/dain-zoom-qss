@@ -1,1 +1,3 @@
 flask
+hmac
+hashlib
