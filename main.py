@@ -8,24 +8,25 @@ ZOOM_TOKENS = {
 }
 
 @app.route('/webhook', methods=['POST'])
-def zoom_webhook():
-    # Get the token from the request header
-    auth_header = request.headers.get('Authorization')
+def webhook_handler():
+    # Extract the token from the Authorization header
+    received_token = request.headers.get('Authorization')
 
-    # Validate the token
-    if auth_header not in ZOOM_TOKENS.values():
+    if not received_token:
+        return jsonify({"error": "Missing token"}), 401
+
+    # Check if the token matches any in the mapping
+    account_id = next((key for key, value in SECRET_TOKENS.items() if value == received_token), None)
+
+    if not account_id:
         return jsonify({"error": "Unauthorized"}), 401
 
-    # Identify the app based on the token
-    app_name = [key for key, token in ZOOM_TOKENS.items() if token == auth_header][0]
-    print(f"Request received from {app_name}")
-
-    # Parse incoming event data
+    # Log or process the event for the identified account
     event_data = request.json
-    print(f"Event Data from {app_name}: {event_data}")
+    print(f"Received event for {account_id}: {event_data}")
 
-    # Respond to Zoom
-    return jsonify({"status": "received"}), 200
+    # Process the event as needed (e.g., saving to a database)
+    return jsonify({"status": "received", "account_id": account_id}), 200
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080)
