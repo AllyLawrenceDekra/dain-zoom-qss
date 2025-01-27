@@ -4,7 +4,7 @@ app = Flask(__name__)
 
 # Dictionary to store verification tokens for multiple apps
 ZOOM_TOKENS = {
-    "Ghost": "token_for_app_1",
+    "Ghost": "zvZ0YVNaRA-BkSkdpmDXzA",
     "Hotdog": "token_for_app_2",
 }
 
