@@ -3,7 +3,7 @@ from flask import Flask, request, jsonify
 app = Flask(__name__)
 
 # Dictionary to store verification tokens for multiple apps
-ZOOM_TOKENS = {
+SECRET_TOKENS = {
     "Ghost": "zvZ0YVNaRA-BkSkdpmDXzA",
 }
 
