@@ -4,8 +4,11 @@ import hashlib
 
 app = Flask(__name__)
 
-# Your secret token (provided by Zoom when setting up the webhook)
-SECRET_TOKEN = "zvZ0YVNaRA-BkSkdpmDXzA"
+# Dictionary to store secret tokens for multiple apps
+SECRET_TOKENS = {
+    "Ghost": "zvZ0YVNaRA-BkSkdpmDXzA",
+    "HotDog": "TDrpVlHkQcSnxWmtf-JwHg"
+}
 
 @app.route('/webhook', methods=['POST'])
 def webhook_handler():
@@ -15,9 +18,16 @@ def webhook_handler():
     if event_data.get("event") == "endpoint.url_validation":
         plain_token = event_data["payload"].get("plainToken")
         if plain_token:
+            # Determine which secret token to use based on a request header or other identifier
+            app_id = request.headers.get('App-ID')  # Custom header or parameter to identify the app
+            secret_token = SECRET_TOKENS.get(app_id)
+
+            if not secret_token:
+                return jsonify({"error": "Invalid or missing App-ID"}), 401
+
             # Generate the HMAC SHA-256 hash
             encrypted_token = hmac.new(
-                SECRET_TOKEN.encode(), 
+                secret_token.encode(), 
                 plain_token.encode(), 
                 hashlib.sha256
             ).hexdigest()
@@ -31,7 +41,7 @@ def webhook_handler():
         else:
             return jsonify({"error": "Invalid validation request"}), 400
 
-    # For other webhook events (example)
+    # For other webhook events
     return jsonify({"message": "Event received"}), 200
 
 
