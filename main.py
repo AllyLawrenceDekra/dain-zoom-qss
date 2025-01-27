@@ -9,7 +9,19 @@ SECRET_TOKENS = {
 
 @app.route('/webhook', methods=['POST'])
 def webhook_handler():
-    # Extract the token from the Authorization header
+    # Parse the incoming request
+    event_data = request.json
+
+    # Handle Zoom URL validation
+    if event_data.get("event") == "endpoint.url_validation":
+        plain_token = event_data["payload"].get("plainToken")
+        if plain_token:
+            # Respond with the plainToken as required by Zoom
+            return jsonify({"plainToken": plain_token}), 200
+        else:
+            return jsonify({"error": "Invalid validation request"}), 400
+
+    # Extract the token from the Authorization header for other requests
     received_token = request.headers.get('Authorization')
 
     if not received_token:
@@ -22,7 +34,6 @@ def webhook_handler():
         return jsonify({"error": "Unauthorized"}), 401
 
     # Log or process the event for the identified account
-    event_data = request.json
     print(f"Received event for {account_id}: {event_data}")
 
     # Process the event as needed (e.g., saving to a database)
