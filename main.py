@@ -5,10 +5,14 @@ app = Flask(__name__)
 # Dictionary to store verification tokens for multiple apps
 SECRET_TOKENS = {
     "Ghost": "zvZ0YVNaRA-BkSkdpmDXzA",
+    "ghost": "6NcEnVdySICrCx1pcRbvVw"
 }
 
 @app.route('/webhook', methods=['POST'])
 def webhook_handler():
+
+    print("Headers:", request.headers)
+    print("Body:", request.get_data(as_text=True))  # Log the raw body
     # Parse the incoming request
     event_data = request.json
 
