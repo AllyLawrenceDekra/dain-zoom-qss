@@ -1,18 +1,23 @@
+import logging
 from flask import Flask, request, jsonify
 import hmac
 import hashlib
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 app = Flask(__name__)
 
 @app.route('/webhook', methods=['POST'])
 def webhook_handler():
     # Log headers and body for debugging
-    print("Headers:", dict(request.headers))
-    print("Body:", request.get_data(as_text=True))
+    logging.info("Headers: %s", dict(request.headers))
+    logging.info("Body: %s", request.get_data(as_text=True))
 
     # Extract the secret token from the x-dain-key header
     secret_token = request.headers.get("x-dain-key")
     if not secret_token:
+        logging.error("Missing secret token in x-dain-key header")
         return jsonify({"error": "Missing secret token in x-dain-key header"}), 401
 
     # Parse the request body
@@ -22,6 +27,7 @@ def webhook_handler():
     if event_data.get("event") == "endpoint.url_validation":
         plain_token = event_data["payload"].get("plainToken")
         if not plain_token:
+            logging.error("Missing plainToken in request body")
             return jsonify({"error": "Missing plainToken in request body"}), 400
 
         # Generate the HMAC SHA-256 hash
@@ -37,25 +43,17 @@ def webhook_handler():
             "encryptedToken": encrypted_token
         }
 
+        logging.info("URL validation successful")
         return jsonify(response), 200
 
     # Handle `phone.call_qos` event
     if event_data.get("event") == "phone.call_qos":
-        # Extract details from the event payload
-        call_qos_data = event_data.get("payload", {})
-        call_id = call_qos_data.get("callId", "Unknown")
-        user_id = call_qos_data.get("userId", "Unknown")
-        qos_metrics = call_qos_data.get("qos", {})
-
-        # Log or process the QoS data
-        print(f"Call QoS Event Received - Call ID: {call_id}, User ID: {user_id}")
-        print("QoS Metrics:", qos_metrics)
-
+        logging.info("Received phone.call_qos event data: %s", event_data)
         # Respond to Zoom
-        return jsonify({"message": "QoS event received", "callId": call_id}), 200
+        return jsonify({"message": "QoS event received"}), 200
 
-    # Handle other events
-    print("Received event:", event_data)
+    # Log other events
+    logging.info("Received event: %s", event_data)
     return jsonify({"message": "Event received"}), 200
 
 
