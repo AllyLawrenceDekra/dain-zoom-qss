@@ -11,8 +11,8 @@ app = Flask(__name__)
 @app.route('/webhook', methods=['POST'])
 def webhook_handler():
     # Log headers and body for debugging
-    logging.info("Headers: %s", dict(request.headers))
-    logging.info("Body: %s", request.get_data(as_text=True))
+    #logging.info("Headers: %s", dict(request.headers))
+    #logging.info("Body: %s", request.get_data(as_text=True))
 
     # Extract the secret token from the x-dain-key header
     secret_token = request.headers.get("x-dain-key")
