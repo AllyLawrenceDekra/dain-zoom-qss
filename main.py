@@ -11,8 +11,8 @@ app = Flask(__name__)
 @app.route('/webhook', methods=['POST'])
 def webhook_handler():
     # Log headers and body for debugging
-    #logging.info("Headers: %s", dict(request.headers))
-    #logging.info("Body: %s", request.get_data(as_text=True))
+    logging.info("Headers: %s", dict(request.headers))
+    logging.info("Body: %s", request.get_data(as_text=True))
 
     # Extract the secret token from the x-dain-key header
     secret_token = request.headers.get("x-dain-key")
@@ -46,11 +46,6 @@ def webhook_handler():
         logging.info("URL validation successful")
         return jsonify(response), 200
 
-    # Handle `phone.call_qos` event
-    if event_data.get("event") == "phone.call_qos":
-        logging.info("Received phone.call_qos event data: %s", event_data)
-        # Respond to Zoom
-        return jsonify({"message": "QoS event received"}), 200
 
     # Log other events
     logging.info("Received event: %s", event_data)
